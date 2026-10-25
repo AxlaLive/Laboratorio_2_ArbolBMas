@@ -2,11 +2,6 @@ import java.text.Normalizer;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
-/**
- * Mantiene la configuracion y el estado compartido del arbol B+.
- * Las operaciones se delegan a clases separadas para que cada requisito
- * (buscar, insertar, eliminar, imprimir y verificar) se pueda localizar facilmente.
- */
 public class ArbolBMas {
     private static final Pattern MARCAS = Pattern.compile("\\p{Mn}+");
 
@@ -102,7 +97,7 @@ public class ArbolBMas {
     // Estado y limites de ocupacion del arbol segun el orden m.
     final int orden;
     final int maxClaves;     // hojas e internos
-    final int minHoja;       // entradas minimas (no raiz)
+    final int minHoja;       // entradas minimas (no raiz) -> ceil((m - 1) / 2)
     final int minInterno;    // ceil(m/2) - 1  (no raiz)
     Nodo raiz;
     int total;
@@ -110,10 +105,13 @@ public class ArbolBMas {
     public ArbolBMas(int orden) {
         this.orden = orden;
         this.maxClaves = orden - 1;
-        // Las hojas necesitan al menos floor(m/2) claves; los internos,
-        // ceil(m/2)-1 separadores. La raiz tiene reglas especiales.
-        this.minHoja = orden / 2;
-        this.minInterno = (orden + 1) / 2 - 1;
+        
+        // Mínimo de claves en hojas = ceil((m - 1) / 2)
+        this.minHoja = (int) Math.ceil((orden - 1.0) / 2.0);
+        
+        // Mínimo para nodos internos (ceil(m/2) - 1)
+        this.minInterno = (int) Math.ceil(orden / 2.0) - 1;
+        
         this.raiz = new Nodo(true, orden);  // el arbol INICIA VACIO
         this.total = 0;
     }
@@ -248,7 +246,7 @@ public class ArbolBMas {
         if (errores.length > 0) {
             System.out.println("Verificacion de propiedades B+: ERROR");
             for (int k = 0; k < errores.length; k++) {
-                System.out.println("   - " + errores[k]);
+                System.out.println("\n" + errores[k]);
             }
         } else {
             System.out.println("Verificacion de propiedades B+: Correcta "

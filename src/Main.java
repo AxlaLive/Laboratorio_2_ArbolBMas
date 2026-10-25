@@ -156,25 +156,25 @@ public class Main {
                     System.out.println("     Verificacion de las propiedades del ARBOL B+");
                     System.out.println("*".repeat(70));
                     System.out.println("Esta funcion verificara las siguientes propiedades:");
-                    System.out.println("  - Todas las hojas estan a la misma profundidad");
-                    System.out.println("  - Los enlaces entre hojas son correctos");
-                    System.out.println("  - El numero total de entradas coincide con el conteo");
-                    System.out.println("  - Las claves estan correctamente ordenadas en cada nodo");
-                    System.out.println("  - Las reglas de ocupacion minima y maxima se cumplen");
-                    System.out.println("  - Las claves separadoras son correctas");
+                    System.out.println(" - Todas las hojas estan a la misma profundidad");
+                    System.out.println(" - Los enlaces entre hojas son correctos");
+                    System.out.println(" - El numero total de entradas coincide con el conteo");
+                    System.out.println(" - Las claves estan correctamente ordenadas en cada nodo");
+                    System.out.println(" - Las reglas de ocupacion minima y maxima se cumplen");
+                    System.out.println(" - Las claves separadoras son correctas");
                     System.out.println("*".repeat(70));
                     String[] errores = arbol.verificar();
                     if (errores.length > 0) {
                         System.out.println("\nVerificacion: ERROR");
                         System.out.println("Se encontraron los siguientes problemas:");
                         for (int k = 0; k < errores.length; k++) {
-                            System.out.println("   - " + errores[k]);
+                            System.out.println(" - " + errores[k]);
                         }
                         System.out.println("\nPosibles causas de errores:");
-                        System.out.println("  * Problemas en las operaciones de insercion/eliminacion");
-                        System.out.println("  * Errores en el manejo de divisiones (split) de nodos");
-                        System.out.println("  * Problemas con fusiones (merge) de nodos");
-                        System.out.println("  * Error en la actualizacion de los enlaces entre hojas");
+                        System.out.println(" - Problemas en las operaciones de insercion/eliminacion");
+                        System.out.println(" - Errores en el manejo de divisiones (split) de nodos");
+                        System.out.println(" - Problemas con fusiones (merge) de nodos");
+                        System.out.println(" - Error en la actualizacion de los enlaces entre hojas");
                     } else {
                         System.out.println("\nVerificacion de propiedades B+: Correcta");
                         System.out.println("Todas las propiedades del arbol B+ estan correctamente implementadas.");
