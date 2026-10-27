@@ -1,6 +1,6 @@
 /**
- * Elimina una entrada real de una hoja y repara cualquier perdida de ocupacion:
- * primero intenta prestar desde hermanos y, si no es posible, fusiona nodos.
+- Elimina una entrada real de una hoja y repara cualquier perdida de ocupacion:
+- primero intenta prestar desde hermanos y, si no es posible, fusiona nodos.
  */
 final class EliminacionArbolBMas {
     private final ArbolBMas arbol;
@@ -11,42 +11,48 @@ final class EliminacionArbolBMas {
 
     public boolean eliminar(String nombre) {
         arbol.titulo("Eliminar '" + nombre + "'");
+        
+        System.out.println("[1. Descenso en el Arbol]");
         // La entrada se busca en la hoja; si no existe, el arbol queda intacto.
         ArbolBMas.Descenso d = arbol.descender(nombre);
         Nodo hoja = d.hoja;
         arbol.t("Nivel " + d.nivel + " (" + arbol.nombreHoja(hoja) + ") " + arbol.fmt(hoja)
-                + ": busqueda secuencial de la entrada real");
+                + ": busqueda secuencial de la entrada real.");
         ArbolBMas.Posicion p = arbol.posEnHoja(hoja, nombre);
         if (!p.hallado) {
-            System.out.println("\nRESULTADO: el nombre '" + nombre + "' No existe; no hay nada que "
-                    + "eliminar. El arbol no cambio.");
+            System.out.println("\n--------------------------------------------------------------");
+            System.out.println("Resultado: El nombre '" + nombre + "' NO existe; no hay nada que eliminar. El arbol no cambio.");
+            System.out.println("--------------------------------------------------------------");
             return false;
         }
 
+        System.out.println("\n[2. Eliminacion y Underflow]");
         String eliminado = hoja.claves[p.pos];
         String antes = arbol.fmt(hoja);
         hoja.quitarClave(p.pos);
         arbol.total--;
-        arbol.t("Se elimina la entrada real '" + eliminado + "' de la hoja: " + antes + " -> " + arbol.fmt(hoja));
+        arbol.t("Se elimina la entrada real '" + eliminado + "' de la hoja:");
+        arbol.t("   " + antes + " -> " + arbol.fmt(hoja));
 
         // Caso 1 es la eliminacion sin underflow; el escenario puede cambiar
         // a 2a/2b por una reparacion en hojas o a 3 si afecta internos/la raiz.
         String caso = "1";
         Nodo nodo = hoja;
+        
+        System.out.println("\n[3. Reparacion y Balance]");
         while (true) {
-            // ---------- el nodo actual es la raiz
+            // el nodo actual es la raiz
             if (nodo == arbol.raiz) {
                 if (nodo.esHoja) {
-                    arbol.t("CASO 1 - Eliminacion simple: la raiz es una hoja y puede "
-                            + "tener menos del minimo; no hay underflow.");
+                    arbol.t("CASO 1 - Eliminacion simple: la raiz es una hoja y puede tener menos del minimo; no hay underflow.");
                     if (nodo.numClaves == 0) {
-                        arbol.t("El arbol quedo vacio.");
+                        arbol.t("El arbol quedo completamente vacio.");
                     }
                 } else if (nodo.numClaves == 0) {
                     caso = "3";
                     Nodo nueva = nodo.hijos[0];
-                    arbol.t("CASO 3 - La raiz interna quedo sin claves (un solo hijo). "
-                            + "Ese hijo " + arbol.fmt(nueva) + " pasa a ser la nueva raiz.");
+                    arbol.t("CASO 3 - La raiz interna quedo sin claves (un solo hijo).");
+                    arbol.t("Ese hijo " + arbol.fmt(nueva) + " pasa a ser la nueva raiz.");
                     arbol.raiz = nueva;
                     arbol.t("La altura disminuye: ahora hay " + arbol.altura() + " niveles.");
                 }
@@ -60,24 +66,23 @@ final class EliminacionArbolBMas {
             if (nodo.numClaves >= minimo) {
                 if (caso.equals("1")) {
                     arbol.t("CASO 1 - Eliminacion simple: la hoja queda con "
-                            + nodo.numClaves + " entradas (minimo " + minimo + "). Sin underflow, "
-                            + "sin prestamo ni merge.");
+                            + nodo.numClaves + " entradas (minimo " + minimo + ").");
+                    arbol.t("   Sin underflow, sin prestamo ni merge.");
                 } else {
-                    arbol.t("El " + tipo + " " + arbol.fmt(nodo) + " cumple la ocupacion minima "
-                            + "(" + nodo.numClaves + " claves, minimo " + minimo + "): el underflow "
-                            + "no se propaga mas.");
+                    arbol.t("El " + tipo + " " + arbol.fmt(nodo) + " cumple la ocupacion");
+                    arbol.t("   minima (" + nodo.numClaves + " claves, minimo " + minimo + "): fin de la propagacion.");
                 }
                 break;
             }
 
             // La eliminacion dejo menos claves que el minimo y hay que redistribuir o fusionar.
             if (nodo.esHoja) {
-                arbol.t("Underflow en hoja " + arbol.fmt(nodo) + ": " + nodo.numClaves + " entradas "
-                        + "(minimo " + minimo + ").");
+                arbol.t("Underflow en hoja " + arbol.fmt(nodo) + ": " + nodo.numClaves
+                        + " entradas (minimo " + minimo + ").");
             } else {
                 caso = "3";
-                arbol.t("CASO 3 - El underflow se propaga a un nodo interno: "
-                        + arbol.fmt(nodo) + " tiene " + nodo.numClaves + " claves (minimo " + minimo + ").");
+                arbol.t("CASO 3 - Underflow propagado a nodo interno " + arbol.fmt(nodo)
+                        + ": " + nodo.numClaves + " claves (minimo " + minimo + ").");
             }
 
             ArbolBMas.Paso paso = d.camino[--d.numCamino];
@@ -89,8 +94,8 @@ final class EliminacionArbolBMas {
             // El orden requerido es: intentar hermano izquierdo antes que el derecho.
             if (izq != null) {
                 boolean puede = izq.numClaves > minimo;
-                arbol.t("Hermano izquierdo " + arbol.fmt(izq) + ": " + izq.numClaves + " claves "
-                        + "(minimo " + minimo + ") -> " + (puede ? "Puede prestar" : "NO puede prestar"));
+                arbol.t("Hermano izquierdo " + arbol.fmt(izq) + " (" + izq.numClaves
+                        + " claves, min " + minimo + ") -> " + (puede ? "Puede prestar" : "NO puede prestar"));
                 if (puede) {
                     if (nodo.esHoja) caso = "2a";
                     prestar(padre, i, nodo, izq, true);
@@ -100,8 +105,8 @@ final class EliminacionArbolBMas {
             // Si el izquierdo no puede prestar, se prueba con el hermano derecho.
             if (der != null) {
                 boolean puede = der.numClaves > minimo;
-                arbol.t("Hermano derecho " + arbol.fmt(der) + ": " + der.numClaves + " claves "
-                        + "(minimo " + minimo + ") -> " + (puede ? "Puede prestar" : "NO puede prestar"));
+                arbol.t("Hermano derecho " + arbol.fmt(der) + " (" + der.numClaves
+                        + " claves, min " + minimo + ") -> " + (puede ? "Puede prestar" : "NO puede prestar"));
                 if (puede) {
                     if (nodo.esHoja) caso = "2a";
                     prestar(padre, i, nodo, der, false);
@@ -121,12 +126,16 @@ final class EliminacionArbolBMas {
         String nombreCaso;
         switch (caso) {
             case "1":  nombreCaso = "CASO 1 (eliminacion simple, sin underflow)"; break;
-            case "2a": nombreCaso = "CASO 2a (underflow resuelto con PRESTAMO de un hermano)"; break;
-            case "2b": nombreCaso = "CASO 2b (underflow resuelto con MERGE de hojas, el padre sigue valido)"; break;
-            default:   nombreCaso = "CASO 3 (el underflow llego a nodos internos y/o cambio la raiz)"; break;
+            case "2a": nombreCaso = "CASO 2a (underflow resuelto con PRESTAMO de hermano)"; break;
+            case "2b": nombreCaso = "CASO 2b (underflow resuelto con MERGE de hojas)"; break;
+            default:   nombreCaso = "CASO 3 (el underflow llego a nodos internos o cambio la raiz)"; break;
         }
-        System.out.println("\nesultado: '" + eliminado + "' eliminado. Escenario resuelto: "
-                + nombreCaso + ".");
+        
+        System.out.println("\n--------------------------------------------------------------");
+        System.out.println("Resultado: '" + eliminado + "' eliminado correctamente.");
+        System.out.println("Escenario resuelto: " + nombreCaso);
+        System.out.println("--------------------------------------------------------------");
+        
         arbol.cerrar("Eliminacion - Caso " + caso + ".");
         return true;
     }
@@ -150,11 +159,10 @@ final class EliminacionArbolBMas {
                 padre.claves[i] = hermano.claves[0];
                 sepNuevo = padre.claves[i];
             }
-            arbol.t("CASO 2a - Prestamo entre hojas desde el hermano " + lado + ": la entrada "
-                    + "real '" + x + "' pasa al nodo en underflow.");
-            arbol.t("Resultado: hoja " + arbol.fmt(nodo) + ", hermano " + arbol.fmt(hermano));
-            arbol.t("Separador del padre actualizado: '" + sepAnt + "' -> '" + sepNuevo + "' "
-                    + "(menor clave del subarbol derecho)");
+            arbol.t("CASO 2a - Prestamo entre hojas (hermano " + lado + "):");
+            arbol.t("La entrada real '" + x + "' pasa al nodo en underflow.");
+            arbol.t("Hoja resultante: " + arbol.fmt(nodo) + " | Hermano: " + arbol.fmt(hermano));
+            arbol.t("Separador del padre actualizado: '" + sepAnt + "' -> '" + sepNuevo + "'");
         } else {
             // Prestamo entre INTERNOS: rotacion a traves del padre (con puntero)
             // El separador baja al nodo necesitado y una clave del hermano sube al padre.
@@ -174,12 +182,10 @@ final class EliminacionArbolBMas {
                 nodo.insertarHijo(nodo.numHijos, puntero);
                 padre.claves[i] = sube;
             }
-            arbol.t("Prestamo entre nodos internos desde el hermano " + lado + ": el separador "
-                    + "del padre '" + baja + "' DESCIENDE al nodo y el separador '" + sube + "' del "
-                    + "hermano ASCIENDE al padre; tambien se transfiere un puntero a un "
-                    + "subarbol completo.");
-            arbol.t("Resultado: nodo " + arbol.fmt(nodo) + " (" + nodo.numHijos + " hijos), "
-                    + "hermano " + arbol.fmt(hermano) + " (" + hermano.numHijos + " hijos)");
+            arbol.t("Prestamo entre nodos internos (hermano " + lado + "):");
+            arbol.t("Separador '" + baja + "' desciende del padre y '" + sube + "' asciende.");
+            arbol.t("Nodo: " + arbol.fmt(nodo) + " (" + nodo.numHijos + " hijos) | Hermano: " 
+                    + arbol.fmt(hermano) + " (" + hermano.numHijos + " hijos)");
         }
     }
 
@@ -197,9 +203,8 @@ final class EliminacionArbolBMas {
                 izq.claves[izq.numClaves++] = der.claves[k];
             }
             izq.siguiente = der.siguiente;
-            arbol.t(antIzq + " + " + antDer + " -> " + arbol.fmt(izq));
-            arbol.t("Se elimina el separador '" + sep + "' del padre (NO se agrega al nodo "
-                    + "fusionado). Enlaces horizontales actualizados; desaparece una hoja.");
+            arbol.t("   " + antIzq + " + " + antDer + " -> " + arbol.fmt(izq));
+            arbol.t("Se retira el separador '" + sep + "' del padre. Enlaces horizontales actualizados.");
         } else {
             // En internos tambien baja el separador del padre y se transfieren todos los hijos.
             arbol.t("Merge (fusion) de nodos internos: ningun hermano puede prestar.");
@@ -210,8 +215,8 @@ final class EliminacionArbolBMas {
             for (int k = 0; k < der.numHijos; k++) {
                 izq.hijos[izq.numHijos++] = der.hijos[k];
             }
-            arbol.t(antIzq + " + separador del padre '" + sep + "' (desciende) + " + antDer
-                    + " -> " + arbol.fmt(izq) + " (" + izq.numHijos + " hijos)");
+            arbol.t("   " + antIzq + " + separador '" + sep + "' + " + antDer);
+            arbol.t("Resultado: " + arbol.fmt(izq) + " (" + izq.numHijos + " hijos)");
         }
         padre.quitarClave(idx);
         padre.quitarHijo(idx + 1);
@@ -229,8 +234,7 @@ final class EliminacionArbolBMas {
         for (int j = 0; j < nodo.numClaves; j++) {
             String correcto = arbol.minClave(nodo.hijos[j + 1]);
             if (!nodo.claves[j].equals(correcto)) {
-                arbol.t("Separador actualizado en " + arbol.fmt(nodo) + ": '" + nodo.claves[j] + "' -> "
-                        + "'" + correcto + "' (menor clave del subarbol derecho)");
+                arbol.t("   [Actualizacion de guia] '" + nodo.claves[j] + "' -> '" + correcto + "'");
                 nodo.claves[j] = correcto;
             }
         }

@@ -11,35 +11,44 @@ final class InsercionArbolBMas {
 
     public boolean insertar(String nombre) {
         arbol.titulo("Insertar '" + nombre + "'");
+        
+        System.out.println("[1. Descenso en el Arbol]");
         // Guardar el camino permite actualizar padres cuando se propaga un split.
         ArbolBMas.Descenso d = arbol.descender(nombre);
         Nodo hoja = d.hoja;
         arbol.t("Nivel " + d.nivel + " (" + arbol.nombreHoja(hoja) + ") " + arbol.fmt(hoja)
-                + ": se llego a la hoja donde corresponde la clave");
+                + ": se llego a la hoja correspondiente.");
         ArbolBMas.Posicion p = arbol.posEnHoja(hoja, nombre);
 
         // Paso 1: no se permiten claves duplicadas.
         if (p.hallado) {
             arbol.t("Clave duplicada: '" + hoja.claves[p.pos] + "' ya existe en la hoja.");
-            System.out.println("\nResultados: no se inserto '" + nombre + "' porque ya existe "
-                    + "(clave duplicada). El arbol no cambio.");
+            System.out.println("\n--------------------------------------------------------------");
+            System.out.println("Resultado: No se inserto '" + nombre + "' por ser duplicado. El arbol no cambio.");
+            System.out.println("--------------------------------------------------------------");
             return false;
         }
 
+        System.out.println("\n[2. Insercion y Capacidad]");
         // Paso 2: insertar ordenadamente en la hoja, desplazando las claves mayores.
         String antes = arbol.fmt(hoja);
         hoja.insertarClave(p.pos, nombre);
         arbol.total++;
-        arbol.t("Insercion ordenada en la hoja: " + antes + " -> " + arbol.fmt(hoja));
+        arbol.t("Insercion ordenada en la hoja:");
+        arbol.t("   " + antes + " -> " + arbol.fmt(hoja));
 
         // Una hoja llena todavia es valida; el split ocurre solo al exceder maxClaves.
         if (hoja.numClaves <= arbol.maxClaves) {
             arbol.t("Capacidad de la hoja: " + hoja.numClaves + "/" + arbol.maxClaves
-                    + ". NO hay overflow (un nodo lleno no es overflow). NO hubo split.");
+                    + ". Sin overflow, sin split.");
+            System.out.println("\n--------------------------------------------------------------");
+            System.out.println("Resultado: '" + nombre + "' insertado correctamente (sin split).");
+            System.out.println("--------------------------------------------------------------");
             arbol.cerrar("Insercion simple, sin split.");
             return true;
         }
 
+        System.out.println("\n[3. Propagacion Y Splits]");
         // Si hay overflow, dividir y llevar el separador al padre; repetir si este tambien se llena.
         ArbolBMas.Division div = splitHoja(hoja);
         Nodo nodo = hoja;
@@ -51,9 +60,9 @@ final class InsercionArbolBMas {
                 nueva.insertarHijo(1, div.nuevo);
                 arbol.raiz = nueva;
                 String origen = nodo.esHoja ? "hoja" : "interna";
-                arbol.t("SPlit de la raiz: la raiz era " + origen + " y se dividio. Se crea una "
-                        + "nueva raiz interna " + arbol.fmt(nueva) + " con 2 hijos. "
-                        + "La Altura aumenta ahora hay " + arbol.altura() + " niveles.");
+                arbol.t("Split de la raiz (" + origen + "): Se crea nueva raiz interna");
+                arbol.t("   " + arbol.fmt(nueva) + " con 2 hijos.");
+                arbol.t("La altura aumenta: ahora hay " + arbol.altura() + " niveles.");
                 break;
             }
             ArbolBMas.Paso paso = d.camino[--d.numCamino];
@@ -62,16 +71,20 @@ final class InsercionArbolBMas {
             antes = arbol.fmt(padre);
             padre.insertarClave(i, div.sep);
             padre.insertarHijo(i + 1, div.nuevo);
-            arbol.t("Se inserta el separador '" + div.sep + "' en el padre: " + antes + " -> "
-                    + arbol.fmt(padre) + " (" + padre.numHijos + " hijos)");
+            arbol.t("Se inserta el separador '" + div.sep + "' en el padre:");
+            arbol.t("   " + antes + " -> " + arbol.fmt(padre) + " (" + padre.numHijos + " hijos)");
             if (padre.numClaves <= arbol.maxClaves) {
                 arbol.t("El padre queda con " + padre.numClaves + "/" + arbol.maxClaves
-                        + " claves: no hay overflow, la division no se propaga mas.");
+                        + " claves: no hay overflow, fin de la propagacion.");
                 break;
             }
             div = splitInterno(padre);
             nodo = padre;
         }
+        
+        System.out.println("\n--------------------------------------------------------------");
+        System.out.println("Resultado: '" + nombre + "' insertado con Split.");
+        System.out.println("--------------------------------------------------------------");
         arbol.cerrar("Insercion con Split.");
         return true;
     }
@@ -81,11 +94,10 @@ final class InsercionArbolBMas {
         // La mediana inferior permanece a la izquierda; la primera clave derecha
         // se copia al padre y tambien sigue siendo una entrada real de la hoja.
         int idx = (n - 1) / 2;
-        arbol.t("Overflow en hoja: estado temporal " + arbol.fmt(hoja)
-                + " (" + n + " entradas, maximo permitido " + arbol.maxClaves + ")");
+        arbol.t("Overflow en hoja: estado temporal " + arbol.fmt(hoja));
+        arbol.t("   (" + n + " entradas, maximo permitido " + arbol.maxClaves + ")");
         arbol.t("*** Split de la hoja ***");
-        arbol.t("Mediana inferior: '" + hoja.claves[idx] + "' (indice " + idx + " de " + n
-                + " elementos); se queda en la hoja izquierda");
+        arbol.t("Mediana inferior: '" + hoja.claves[idx] + "' (indice " + idx + "); se queda a la izquierda.");
         Nodo nuevo = new Nodo(true, arbol.orden);
         for (int k = idx + 1; k < n; k++) {          // mitad derecha pasa al nodo nuevo
             nuevo.claves[nuevo.numClaves++] = hoja.claves[k];
@@ -95,10 +107,10 @@ final class InsercionArbolBMas {
         nuevo.siguiente = hoja.siguiente;
         hoja.siguiente = nuevo;
         String sep = nuevo.claves[0];
-        arbol.t("Hoja izquierda: " + arbol.fmt(hoja) + "   Hoja derecha: " + arbol.fmt(nuevo));
-        arbol.t("Se copia al padre la primera clave de la hoja derecha: '" + sep + "' "
-                + "(tambien permanece en la hoja derecha como entrada real)");
-        arbol.t("Enlaces entre hojas actualizados (izquierda -> derecha -> antigua siguiente)");
+        arbol.t("Hoja izquierda: " + arbol.fmt(hoja));
+        arbol.t("Hoja derecha:   " + arbol.fmt(nuevo));
+        arbol.t("Se copia al padre la primera clave de la hoja derecha: '" + sep + "'");
+        arbol.t("Enlaces entre hojas actualizados.");
         return new ArbolBMas.Division(sep, nuevo);
     }
 
@@ -106,12 +118,11 @@ final class InsercionArbolBMas {
         int n = nodo.numClaves;
         // En nodos internos la mediana se promueve y deja de pertenecer a ambos hijos.
         int idx = (n - 1) / 2;
-        arbol.t("Overflow en nodo interno: estado temporal " + arbol.fmt(nodo)
-                + " (" + n + " claves, maximo permitido " + arbol.maxClaves + ")");
+        arbol.t("Overflow en nodo interno: estado temporal " + arbol.fmt(nodo));
+        arbol.t("   (" + n + " claves, maximo permitido " + arbol.maxClaves + ")");
         arbol.t("*** Split Interno ***");
         String sep = nodo.claves[idx];
-        arbol.t("Mediana inferior: '" + sep + "' (indice " + idx + "); se Promueve: asciende al "
-                + "padre y se retira de ambos nodos resultantes");
+        arbol.t("Mediana inferior: '" + sep + "' (indice " + idx + "); asciende al padre.");
         Nodo nuevo = new Nodo(false, arbol.orden);
         for (int k = idx + 1; k < n; k++) {          // claves de la derecha
             nuevo.claves[nuevo.numClaves++] = nodo.claves[k];
@@ -124,10 +135,8 @@ final class InsercionArbolBMas {
         nodo.claves[idx] = null;                     // la mediana sube: se retira
         nodo.numClaves = idx;
         nodo.numHijos = idx + 1;                     // punteros P0..Pidx
-        arbol.t("Nodo izquierdo: " + arbol.fmt(nodo) + " recibe los punteros P0..P" + idx
-                + " (" + nodo.numHijos + " hijos)");
-        arbol.t("Nodo derecho:   " + arbol.fmt(nuevo) + " recibe los punteros P" + (idx + 1) + "..P" + n
-                + " (" + nuevo.numHijos + " hijos)");
+        arbol.t("Nodo izquierdo: " + arbol.fmt(nodo) + " (" + nodo.numHijos + " hijos)");
+        arbol.t("Nodo derecho:   " + arbol.fmt(nuevo) + " (" + nuevo.numHijos + " hijos)");
         return new ArbolBMas.Division(sep, nuevo);
     }
 }

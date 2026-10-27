@@ -5,10 +5,12 @@ import java.util.regex.Pattern;
 public class ArbolBMas {
     private static final Pattern MARCAS = Pattern.compile("\\p{Mn}+");
 
-    /** Normaliza espacios, unifica Unicode y convierte el nombre a minusculas. */
     public static String normalizarNombre(String texto) {
-        String limpio = texto.replaceAll("(?U)\\s+", " ").trim();
-        return Normalizer.normalize(limpio, Normalizer.Form.NFC).toLowerCase(Locale.ROOT);
+    String limpio = texto.trim();
+    // Pasa a minúsculas y unifica Unicode
+    String normalizado = Normalizer.normalize(limpio, Normalizer.Form.NFC).toLowerCase(Locale.ROOT);
+    // Elimina automáticamente cualquier tilde.
+    return sinTildes(normalizado);
     }
 
     private static String sinTildes(String texto) {
